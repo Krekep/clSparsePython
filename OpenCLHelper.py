@@ -1,7 +1,16 @@
 import ctypes
 
-def OpenCLInitializer_CPU(path : str):
+class cl_context(ctypes.Structure):
+        _fields_ = []
+class cl_queue(ctypes.Structure):
+        _fields_ = []
+openCL = None
+
+def LoadLibrary(path : str):
+    global openCL
     openCL = ctypes.cdll.LoadLibrary(path)
+    
+def Initializer_FirstPlatform():
     status = ctypes.c_int(0)
 
     # PLATFORMS
@@ -70,8 +79,6 @@ def OpenCLInitializer_CPU(path : str):
 ##    props[1] = ctypes.pointer(platforms[0])
 ##    props[2] = ctypes.c_int(0)
 ##    props = ctypes.cast(props, ctypes.POINTER(c_void))
-    class cl_context(ctypes.Structure):
-        _fields_ = []
     openCL.clCreateContext.restype = ctypes.POINTER(cl_context)
     openCL.clCreateContext.argtype = [ctypes.POINTER(ctypes.c_uint),
                                       ctypes.c_uint,
@@ -87,7 +94,38 @@ def OpenCLInitializer_CPU(path : str):
                                      None,
                                      ctypes.pointer(status))
     print("Status of creating context: " + str(status))
-    return context
-    
+    openCL.clCreateCommandQueue.restype = ctypes.POINTER(cl_queue)
+    openCL.clCreateCommandQueue.argtype = [cl_context,
+                                          cl_device_id,
+                                          ctypes.c_voidp,
+                                          ctypes.POINTER(ctypes.c_int)]
+    status = ctypes.c_int(0)
+    queue = openCL.clCreateCommandQueue(context,
+                                         devices,
+                                         None,
+                                         ctypes.pointer(status))
+    print("Status of creating command queue: " + str(status))
+    return context, queue
 
-#OpenCLInitializer_CPU("libOpenCL.so")
+def CreateBuffer(context : cl_context, a : int, b : ctypes.c_size_t):
+    class cl_mem(ctypes.Structure):
+        _fields_ = []
+    openCL.clCreateBuffer.restype = cl_mem
+    openCL.clCreateBuffer.argtype = [cl_context,
+                                     ctypes.c_ulong,
+                                     ctypes.c_ulong,
+                                     ctypes.c_voidp,
+                                     ctypes.POINTER(ctypes.c_int)]
+    status = ctypes.c_int(0)
+    b = int(b.value)
+    c = ctypes.c_size_t(a * b)
+    print(c)
+    buffer = openCL.clCreateBuffer(context,
+                                   ctypes.c_ulong(4), # CL_MEM_READ_ONLY
+                                   c,
+                                   None,
+                                   ctypes.pointer(status))
+    print("Status of creating buffer: " + str(status))
+                                   
+
+#OpenCLInitializer_FirstPlatform("libOpenCL.so")
