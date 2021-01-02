@@ -1,0 +1,74 @@
+import ctypes
+
+__all__ = [
+    "ClsparseCreateResult",
+    "clsparse_load_and_configure",
+    "check",
+    "ClsparseCsrMatrix"
+]
+
+
+class ClsparseCreateResult(ctypes.Structure):
+    _fields_ = [("clsparseStatus", ctypes.c_int),
+                ("clsparseControl", ctypes.c_void_p)]
+
+
+class ClsparseCsrMatrix(ctypes.Structure):
+    _fields_ = [("num_rows", ctypes.c_ulong),
+                ("num_cols", ctypes.c_ulong),
+                ("num_nonzeros", ctypes.c_ulong),
+                ("values", ctypes.c_void_p),
+                ("col_indices", ctypes.c_void_p),
+                ("row_pointer", ctypes.c_void_p),
+                ("off_values", ctypes.c_ulong),
+                ("off_col_indices", ctypes.c_ulong),
+                ("off_row_pointer", ctypes.c_ulong),
+                ("meta", ctypes.c_void_p)]
+
+
+def clsparse_load_and_configure(clsparse_lib_path: str):
+    lib = ctypes.cdll.LoadLibrary(clsparse_lib_path)
+
+    lib.clsparseSetup.restype = ctypes.c_uint
+
+    lib.clsparseCreateControl.restype = ClsparseCreateResult
+    lib.clsparseCreateControl.argtypes = [ctypes.c_void_p]  # opencl command queue
+
+    lib.clsparseHeaderfromFile.restype = ctypes.c_int
+    lib.clsparseHeaderfromFile.argtypes = [ctypes.POINTER(ctypes.c_ulong),
+                                           ctypes.POINTER(ctypes.c_ulong),
+                                           ctypes.POINTER(ctypes.c_ulong),
+                                           ctypes.c_char_p]
+
+    lib.clsparseSCsrMatrixfromFile.restype = ctypes.c_int
+    lib.clsparseSCsrMatrixfromFile.argtypes = [ctypes.POINTER(ClsparseCsrMatrix),
+                                               ctypes.c_void_p,
+                                               ctypes.c_void_p,
+                                               ctypes.c_bool]
+
+    return lib
+
+
+_status_codes_mappings = {
+    0: "clsparseSuccess",
+    1: "clsparseInvalidValue",
+    2: "clsparseInvalidCommandQueue",
+    3: "clsparseInvalidContext",
+    4: "clsparseInvalidMemObject",
+    5: "clsparseInvalidDevice",
+    6: "clsparseInvalidEventWaitList",
+    7: "clsparseInvalidEvent",
+    8: "clsparseOutOfResources",
+    9: "clsparseOutOfHostMemory",
+    10: "clsparseInvalidOperation",
+    11: "clsparseCompilerNotAvailable",
+    12: "clsparseBuildProgramFailure",
+    13: "clsparseInvalidKernelArgs",
+}
+
+_success = 0
+
+
+def check(status_code):
+    if status_code != _success:
+        raise Exception(_status_codes_mappings[status_code])
