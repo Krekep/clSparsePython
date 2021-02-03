@@ -54,14 +54,113 @@ class Wrapper:
         self.opencl_loaded_dll = opencl.opencl_load_and_configure(self.opencl_path)
         self.clsparse_loaded_dll = dll.clsparse_load_and_configure(self.clsparse_path)
 
+        status = self.clsparse_loaded_dll.clsparseSetup()
+        dll.check(status)
         self._setup_platform()
         self._setup_device()
         self._setup_context()
         self._setup_command_queue()
         self._clsparse_create_result()
+        # self.test_queue()
+        # self.test_context()
 
     def __del__(self):
         pass
+
+    def test_queue(self):
+        size = ctypes.c_size_t(0)
+        status = self.opencl_loaded_dll.clGetCommandQueueInfo(self.command_queue,
+                                                              ctypes.c_int(4240),
+                                                              0,
+                                                              None,
+                                                              ctypes.pointer(size))
+        name = (ctypes.c_char * size.value)()
+        status = self.opencl_loaded_dll.clGetCommandQueueInfo(self.command_queue,
+                                                              ctypes.c_int(4240),
+                                                              size,
+                                                              name,
+                                                              None)
+        print(name.value)
+
+        status = self.opencl_loaded_dll.clGetCommandQueueInfo(self.command_queue,
+                                                              ctypes.c_int(4241),
+                                                              0,
+                                                              None,
+                                                              ctypes.pointer(size))
+        name = (ctypes.c_char * size.value)()
+        status = self.opencl_loaded_dll.clGetCommandQueueInfo(self.command_queue,
+                                                              ctypes.c_int(4241),
+                                                              size,
+                                                              name,
+                                                              None)
+        print(str(name.value))
+
+        status = self.opencl_loaded_dll.clGetCommandQueueInfo(self.command_queue,
+                                                              ctypes.c_int(4242),
+                                                              0,
+                                                              None,
+                                                              ctypes.pointer(size))
+        name = (ctypes.c_char * size.value)()
+        status = self.opencl_loaded_dll.clGetCommandQueueInfo(self.command_queue,
+                                                              ctypes.c_int(4242),
+                                                              size,
+                                                              name,
+                                                              None)
+        print(str(name.value))
+
+        status = self.opencl_loaded_dll.clGetCommandQueueInfo(self.command_queue,
+                                                              ctypes.c_int(4243),
+                                                              0,
+                                                              None,
+                                                              ctypes.pointer(size))
+        name = (ctypes.c_char * size.value)()
+        status = self.opencl_loaded_dll.clGetCommandQueueInfo(self.command_queue,
+                                                              ctypes.c_int(4243),
+                                                              size,
+                                                              name,
+                                                              None)
+        print(str(name.value))
+
+    def test_context(self):
+        size = ctypes.c_size_t(0)
+        status = self.opencl_loaded_dll.clGetContextInfo(self.context,
+                                                         ctypes.c_int(4224),
+                                                         0,
+                                                         None,
+                                                         ctypes.pointer(size))
+        name = (ctypes.c_char * size.value)()
+        status = self.opencl_loaded_dll.clGetContextInfo(self.context,
+                                                         ctypes.c_int(4224),
+                                                         size,
+                                                         name,
+                                                         None)
+        print(name.value)
+
+        status = self.opencl_loaded_dll.clGetContextInfo(self.context,
+                                                         ctypes.c_int(4225),
+                                                         0,
+                                                         None,
+                                                         ctypes.pointer(size))
+        name = (ctypes.c_char * size.value)()
+        status = self.opencl_loaded_dll.clGetContextInfo(self.context,
+                                                         ctypes.c_int(4225),
+                                                         size,
+                                                         name,
+                                                         None)
+        print(str(name.value))
+
+        status = self.opencl_loaded_dll.clGetContextInfo(self.context,
+                                                         ctypes.c_int(4226),
+                                                         0,
+                                                         None,
+                                                         ctypes.pointer(size))
+        name = (ctypes.c_char * size.value)()
+        status = self.opencl_loaded_dll.clGetContextInfo(self.command_queue,
+                                                         ctypes.c_int(4226),
+                                                         size,
+                                                         name,
+                                                         None)
+        print(str(name.value))
 
     def _setup_platform(self):
         num_of_platforms = ctypes.c_uint(0)

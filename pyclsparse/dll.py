@@ -26,6 +26,17 @@ class ClsparseCsrMatrix(ctypes.Structure):
                 ("meta", ctypes.c_void_p)]
 
 
+class ClsparseScalar(ctypes.Structure):
+    _fields_ = [("value", ctypes.c_void_p),
+                ("off_value", ctypes.c_ulong)]
+
+
+class ClsparseDenseVector(ctypes.Structure):
+    _fields_ = [("num_values", ctypes.c_ulong),
+                ("values", ctypes.c_void_p),
+                ("off_values", ctypes.c_ulong)]
+
+
 def clsparse_load_and_configure(clsparse_lib_path: str):
     lib = ctypes.cdll.LoadLibrary(clsparse_lib_path)
 
@@ -33,6 +44,15 @@ def clsparse_load_and_configure(clsparse_lib_path: str):
 
     lib.clsparseCreateControl.restype = ClsparseCreateResult
     lib.clsparseCreateControl.argtypes = [ctypes.c_void_p]  # opencl command queue
+
+    lib.clsparseInitCsrMatrix.restype = ctypes.c_int
+    lib.clsparseInitCsrMatrix.argtypes = [ctypes.POINTER(ClsparseCsrMatrix)]
+
+    lib.clsparseInitVector.restype = ctypes.c_int
+    lib.clsparseInitVector.argtypes = [ctypes.POINTER(ClsparseDenseVector)]
+
+    lib.clsparseInitScalar.restype = ctypes.c_int
+    lib.clsparseInitScalar.argtypes = [ctypes.POINTER(ClsparseScalar)]
 
     lib.clsparseHeaderfromFile.restype = ctypes.c_int
     lib.clsparseHeaderfromFile.argtypes = [ctypes.POINTER(ctypes.c_ulong),
@@ -42,7 +62,7 @@ def clsparse_load_and_configure(clsparse_lib_path: str):
 
     lib.clsparseSCsrMatrixfromFile.restype = ctypes.c_int
     lib.clsparseSCsrMatrixfromFile.argtypes = [ctypes.POINTER(ClsparseCsrMatrix),
-                                               ctypes.c_void_p,
+                                               ctypes.c_char_p,
                                                ctypes.c_void_p,
                                                ctypes.c_bool]
 
