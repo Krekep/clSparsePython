@@ -168,31 +168,31 @@ class Wrapper:
         status = self.opencl_loaded_dll.clGetPlatformIDs(0,
                                                          None,
                                                          ctypes.byref(num_of_platforms))
-        dll.check(status)
+        opencl.check(status)
         if num_of_platforms == 0:
             raise Exception("No OpenCL platform found")
         status = self.opencl_loaded_dll.clGetPlatformIDs(1,
                                                          ctypes.byref(self._cl_platform_id),
                                                          None)
-        dll.check(status)
+        opencl.check(status)
 
     def _setup_device(self):
         num_devices = ctypes.c_uint(0)
         self._cl_device_id = ctypes.c_void_p(0)
         status = self.opencl_loaded_dll.clGetDeviceIDs(self._cl_platform_id,
-                                                       ctypes.c_uint(4294967295),  # CL_DEVICE_TYPE_ALL
+                                                       ctypes.c_uint(opencl.map_flags("CL_DEVICE_TYPE_ALL")),
                                                        0,
                                                        None,
                                                        ctypes.pointer(num_devices))
-        dll.check(status)
+        opencl.check(status)
         if num_devices == 0:
             raise Exception("No OpenCL devices found")
         status = self.opencl_loaded_dll.clGetDeviceIDs(self._cl_platform_id,
-                                                       ctypes.c_uint(4294967295),  # CL_DEVICE_TYPE_ALL
+                                                       ctypes.c_uint(opencl.map_flags("CL_DEVICE_TYPE_ALL")),
                                                        1,  # num_devices
                                                        ctypes.byref(self._cl_device_id),
                                                        None)
-        dll.check(status)
+        opencl.check(status)
 
     def _setup_context(self):
         _context = ctypes.c_void_p(0)
@@ -203,7 +203,7 @@ class Wrapper:
                                                           None,
                                                           None,
                                                           ctypes.pointer(status))
-        dll.check(status.value)
+        opencl.check(status.value)
         self.context = _context
 
     def _setup_command_queue(self):
@@ -213,7 +213,7 @@ class Wrapper:
                                                              self._cl_device_id,
                                                              None,
                                                              ctypes.pointer(status))
-        dll.check(status.value)
+        opencl.check(status.value)
         self.command_queue = _queue
 
     def _clsparse_create_result(self):

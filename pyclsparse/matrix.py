@@ -3,7 +3,7 @@ import os
 
 import numpy
 
-from . import wrapper
+from . import wrapper, opencl
 from . import dll
 
 __all__ = [
@@ -28,30 +28,30 @@ class Matrix:
         status = ctypes.c_int(0)
 
         self.matrix.values = self.wrapper.opencl_loaded_dll.clCreateBuffer(self.wrapper.context,
-                                                                           ctypes.c_int(1),  # CL_MEM_READ_WRITE
+                                                                           ctypes.c_int(opencl.map_flags("CL_MEM_READ_WRITE")),
                                                                            ctypes.c_uint(self.matrix.num_nonzeros
                                                                                          * ctypes.sizeof(ctypes.c_float)),
                                                                            None,
                                                                            ctypes.byref(status))
-        dll.check(status.value)
+        opencl.check(status.value)
         self.matrix.col_indices = self.wrapper.opencl_loaded_dll.clCreateBuffer(self.wrapper.context,
-                                                                                ctypes.c_int(1),  # CL_MEM_READ_WRITE
+                                                                                ctypes.c_int(opencl.map_flags("CL_MEM_READ_WRITE")),
                                                                                 ctypes.c_uint(
                                                                                     self.matrix.num_nonzeros
                                                                                     * ctypes.sizeof(ctypes.c_ulong)),
                                                                                 # perhaps c_uint
                                                                                 None,
                                                                                 ctypes.byref(status))
-        dll.check(status.value)
+        opencl.check(status.value)
         self.matrix.row_pointer = self.wrapper.opencl_loaded_dll.clCreateBuffer(self.wrapper.context,
-                                                                                ctypes.c_int(1),  # CL_MEM_READ_WRITE
+                                                                                ctypes.c_int(opencl.map_flags("CL_MEM_READ_WRITE")),
                                                                                 ctypes.c_uint(
                                                                                     (self.matrix.num_rows + 1)
                                                                                     * ctypes.sizeof(ctypes.c_ulong)),
                                                                                 # perhaps c_uint
                                                                                 None,
                                                                                 ctypes.byref(status))
-        dll.check(status.value)
+        opencl.check(status.value)
         # self.some_info()
         status = self.wrapper.clsparse_loaded_dll.clsparseSCsrMatrixfromFile(ctypes.byref(self.matrix),
                                                                              byte_path,

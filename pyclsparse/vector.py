@@ -1,7 +1,7 @@
 import ctypes
 import numpy
 
-from . import wrapper
+from . import wrapper, opencl
 from . import dll
 
 __all__ = [
@@ -19,12 +19,11 @@ class Vector:
 
         status = ctypes.c_int(0)
         self.vector.values = self.wrapper.opencl_loaded_dll.clCreateBuffer(self.wrapper.context,
-                                                                           ctypes.c_int(9),
-                                                                           # CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR
+                                                                           ctypes.c_int(opencl.map_flags("CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR")),
                                                                            n * ctypes.sizeof(ctypes.c_float),
                                                                            (ctypes.c_float * n)(*x),
                                                                            ctypes.byref(status))
-        dll.check(status.value)
+        opencl.check(status.value)
         self.vector.num_values = ctypes.c_ulong(n)
 
     # def __del__(self):
