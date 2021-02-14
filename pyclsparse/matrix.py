@@ -27,36 +27,38 @@ class Matrix:
         self.matrix.num_nonzeros = _header[2]
         status = ctypes.c_int(0)
 
-        self.matrix.values = self.wrapper.opencl_loaded_dll.clCreateBuffer(self.wrapper.context,
-                                                                           ctypes.c_int(opencl.map_flags("CL_MEM_READ_WRITE")),
-                                                                           ctypes.c_uint(self.matrix.num_nonzeros
-                                                                                         * ctypes.sizeof(ctypes.c_float)),
-                                                                           None,
-                                                                           ctypes.byref(status))
+        self.matrix.values = self.wrapper.opencl_loaded_dll.clCreateBuffer(
+            self.wrapper.context,
+            ctypes.c_int(opencl.map_flags("CL_MEM_READ_WRITE")),
+            ctypes.c_uint(self.matrix.num_nonzeros * ctypes.sizeof(ctypes.c_float)),
+            None,
+            ctypes.byref(status))
         opencl.check(status.value)
-        self.matrix.col_indices = self.wrapper.opencl_loaded_dll.clCreateBuffer(self.wrapper.context,
-                                                                                ctypes.c_int(opencl.map_flags("CL_MEM_READ_WRITE")),
-                                                                                ctypes.c_uint(
-                                                                                    self.matrix.num_nonzeros
-                                                                                    * ctypes.sizeof(ctypes.c_ulong)),
-                                                                                # perhaps c_uint
-                                                                                None,
-                                                                                ctypes.byref(status))
+        self.matrix.col_indices = self.wrapper.opencl_loaded_dll.clCreateBuffer(
+            self.wrapper.context,
+            ctypes.c_int(opencl.map_flags("CL_MEM_READ_WRITE")),
+            ctypes.c_uint(self.matrix.num_nonzeros * ctypes.sizeof(ctypes.c_ulong)),  # perhaps c_uint
+            None,
+            ctypes.byref(status))
         opencl.check(status.value)
-        self.matrix.row_pointer = self.wrapper.opencl_loaded_dll.clCreateBuffer(self.wrapper.context,
-                                                                                ctypes.c_int(opencl.map_flags("CL_MEM_READ_WRITE")),
-                                                                                ctypes.c_uint(
-                                                                                    (self.matrix.num_rows + 1)
-                                                                                    * ctypes.sizeof(ctypes.c_ulong)),
-                                                                                # perhaps c_uint
-                                                                                None,
-                                                                                ctypes.byref(status))
+        self.matrix.row_pointer = self.wrapper.opencl_loaded_dll.clCreateBuffer(
+            self.wrapper.context,
+            ctypes.c_int(opencl.map_flags("CL_MEM_READ_WRITE")),
+            ctypes.c_uint((self.matrix.num_rows + 1) * ctypes.sizeof(ctypes.c_uint)),  # perhaps c_uint
+            None,
+            ctypes.byref(status))
         opencl.check(status.value)
+        print(ctypes.c_void_p.from_address(self.matrix.values).value)
+        print(self.matrix.values, self.matrix.col_indices, self.matrix.row_pointer)
+        self.matrix.values += ctypes.c_void_p.from_address(self.matrix.values).value
+        self.matrix.col_indices += ctypes.c_void_p.from_address(self.matrix.values).value
+        self.matrix.row_pointer += ctypes.c_void_p.from_address(self.matrix.values).value
         # self.some_info()
-        status = self.wrapper.clsparse_loaded_dll.clsparseSCsrMatrixfromFile(ctypes.byref(self.matrix),
-                                                                             byte_path,
-                                                                             wrapper.create_result.clsparseControl,
-                                                                             ctypes.c_bool(True))
+        status = self.wrapper.clsparse_loaded_dll.clsparseSCsrMatrixfromFile(
+            ctypes.byref(self.matrix),
+            byte_path,
+            wrapper.create_result.clsparseControl,
+            ctypes.c_bool(True))
         dll.check(status.value)
 
     # def __del__(self):
@@ -67,10 +69,11 @@ class Matrix:
         nrow = ctypes.c_ulong(0)
         ncol = ctypes.c_ulong(0)
 
-        status = self.wrapper.clsparse_loaded_dll.clsparseHeaderfromFile(ctypes.pointer(nnz),
-                                                                         ctypes.pointer(nrow),
-                                                                         ctypes.pointer(ncol),
-                                                                         byte_path)
+        status = self.wrapper.clsparse_loaded_dll.clsparseHeaderfromFile(
+            ctypes.pointer(nnz),
+            ctypes.pointer(nrow),
+            ctypes.pointer(ncol),
+            byte_path)
         dll.check(status)
         return nrow, ncol, nnz
 

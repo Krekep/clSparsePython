@@ -18,6 +18,21 @@ def opencl_load_and_configure(opencl_lib_path: str):
     cl_program = ctypes.c_void_p
     cl_kernel = ctypes.c_void_p
 
+    lib.clCreateProgramWithSource.restype = cl_program  # undefined symbol???
+    lib.clCreateProgramWithSource.argtype = [cl_context,
+                                             ctypes.c_uint,
+                                             ctypes.POINTER(ctypes.POINTER(ctypes.c_char)),
+                                             ctypes.POINTER(ctypes.c_uint),
+                                             ctypes.c_int]
+
+    lib.clBuildProgram.restype = ctypes.c_int
+    lib.clBuildProgram.argtype = [cl_program,
+                                  ctypes.c_uint,
+                                  ctypes.POINTER(cl_device_id),
+                                  ctypes.POINTER(ctypes.c_char),
+                                  ctypes.c_void_p,
+                                  ctypes.c_void_p]
+
     lib.clGetPlatformIDs.restype = ctypes.c_int
     lib.clGetPlatformIDs.argtype = [ctypes.c_uint,
                                     ctypes.POINTER(cl_platform_id),
@@ -58,12 +73,48 @@ def opencl_load_and_configure(opencl_lib_path: str):
                                     ctypes.POINTER(ctypes.c_char),
                                     ctypes.POINTER(ctypes.c_size_t)]
 
+    lib.clGetDeviceInfo.restype = ctypes.c_int
+    lib.clGetDeviceInfo.argtype = [cl_device_id,
+                                   ctypes.c_int,
+                                   ctypes.c_size_t,
+                                   ctypes.POINTER(ctypes.c_char),
+                                   ctypes.POINTER(ctypes.c_size_t)]
+
     lib.clCreateBuffer.restype = cl_mem
     lib.clCreateBuffer.argtype = [cl_context,
                                   ctypes.c_ulong,
                                   ctypes.c_ulong,
                                   ctypes.c_void_p,
                                   ctypes.POINTER(ctypes.c_int)]
+
+    lib.clCreateKernel.restype = cl_kernel
+    lib.clCreateKernel.argtype = [cl_program,
+                                  ctypes.POINTER(ctypes.c_char),
+                                  ctypes.POINTER(ctypes.c_int)]
+
+    lib.clSetKernelArg.restype = ctypes.c_int
+    lib.clSetKernelArg.argtype = [cl_kernel,
+                                  ctypes.c_uint,
+                                  ctypes.c_size_t,
+                                  ctypes.c_void_p]
+
+    lib.clEnqueueTask.restype = ctypes.c_int
+    lib.clEnqueueTask.argtype = [cl_queue,
+                                 cl_kernel,
+                                 ctypes.c_uint,
+                                 ctypes.c_void_p,  # const cl_event* event_wait_list
+                                 ctypes.c_void_p]  # cl_event* event
+
+    lib.clEnqueueReadBuffer.restype = ctypes.c_int
+    lib.clEnqueueReadBuffer.argtype = [cl_queue,
+                                       cl_mem,
+                                       ctypes.c_bool,
+                                       ctypes.c_size_t,
+                                       ctypes.c_size_t,
+                                       ctypes.c_void_p,
+                                       ctypes.c_uint,
+                                       ctypes.c_void_p,  # const cl_event* event_wait_list
+                                       ctypes.c_void_p]  # cl_event* event
 
     return lib
 

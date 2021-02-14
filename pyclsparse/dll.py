@@ -66,6 +66,13 @@ def clsparse_load_and_configure(clsparse_lib_path: str):
                                                ctypes.c_void_p,
                                                ctypes.c_bool]
 
+    lib.cldenseSaxpy.restype = ctypes.c_int
+    lib.cldenseSaxpy.argtype = [ctypes.POINTER(ClsparseDenseVector),
+                                ctypes.POINTER(ClsparseScalar),
+                                ctypes.POINTER(ClsparseDenseVector),
+                                ctypes.POINTER(ClsparseDenseVector),
+                                ctypes.c_void_p]
+
     return lib
 
 

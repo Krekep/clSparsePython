@@ -9,6 +9,7 @@ __all__ = [
     "opencl_dll",
     "init_wrapper",
     "context",
+    "device",
     "command_queue",
     "create_result"
 ]
@@ -19,6 +20,7 @@ singleton = None
 clsparse_dll = None
 opencl_dll = None
 context = None
+device = None
 command_queue = None
 create_result = None
 
@@ -28,6 +30,7 @@ def init_wrapper():
     global clsparse_dll
     global opencl_dll
     global context
+    global device
     global command_queue
     global create_result
 
@@ -35,6 +38,7 @@ def init_wrapper():
     clsparse_dll = singleton.clsparse_loaded_dll
     opencl_dll = singleton.opencl_loaded_dll
     context = singleton.context
+    device = singleton.cl_device_id
     command_queue = singleton.command_queue
     create_result = singleton.clsparse_create_result
 
@@ -42,7 +46,7 @@ def init_wrapper():
 class Wrapper:
     def __init__(self):
         self._cl_platform_id = None
-        self._cl_device_id = None
+        self.cl_device_id = None
         self.context = None
         self.command_queue = None
         self.clsparse_create_result = None
@@ -61,8 +65,10 @@ class Wrapper:
         self._setup_context()
         self._setup_command_queue()
         self._clsparse_create_result()
+
         # self.test_queue()
         # self.test_context()
+        # self.test_device()
 
     def __del__(self):
         pass
@@ -122,6 +128,7 @@ class Wrapper:
         print(str(name.value))
 
     def test_context(self):
+        print("context info")
         size = ctypes.c_size_t(0)
         status = self.opencl_loaded_dll.clGetContextInfo(self.context,
                                                          ctypes.c_int(4224),
@@ -129,12 +136,14 @@ class Wrapper:
                                                          None,
                                                          ctypes.pointer(size))
         name = (ctypes.c_char * size.value)()
+        opencl.check(status)
         status = self.opencl_loaded_dll.clGetContextInfo(self.context,
                                                          ctypes.c_int(4224),
                                                          size,
                                                          name,
                                                          None)
-        print(name.value)
+        print("CL_CONTEXT_REFERENCE_COUNT " + str(name.value))
+        opencl.check(status)
 
         status = self.opencl_loaded_dll.clGetContextInfo(self.context,
                                                          ctypes.c_int(4225),
@@ -142,12 +151,14 @@ class Wrapper:
                                                          None,
                                                          ctypes.pointer(size))
         name = (ctypes.c_char * size.value)()
+        opencl.check(status)
         status = self.opencl_loaded_dll.clGetContextInfo(self.context,
                                                          ctypes.c_int(4225),
                                                          size,
                                                          name,
                                                          None)
-        print(str(name.value))
+        print("CL_CONTEXT_DEVICES " + str(name.value))
+        opencl.check(status)
 
         status = self.opencl_loaded_dll.clGetContextInfo(self.context,
                                                          ctypes.c_int(4226),
@@ -155,12 +166,64 @@ class Wrapper:
                                                          None,
                                                          ctypes.pointer(size))
         name = (ctypes.c_char * size.value)()
-        status = self.opencl_loaded_dll.clGetContextInfo(self.command_queue,
+        opencl.check(status)
+        status = self.opencl_loaded_dll.clGetContextInfo(self.context,
                                                          ctypes.c_int(4226),
                                                          size,
                                                          name,
                                                          None)
-        print(str(name.value))
+        print("CL_CONTEXT_PROPERTIES " + str(name.value))
+        opencl.check(status)
+
+    def test_device(self):
+        print("device info")
+        size = ctypes.c_size_t(0)
+        status = self.opencl_loaded_dll.clGetDeviceInfo(self.cl_device_id,
+                                                        ctypes.c_int(4096),  # CL_DEVICE_TYPE
+                                                        0,
+                                                        None,
+                                                        ctypes.pointer(size))
+        name = (ctypes.c_char * size.value)()
+        opencl.check(status)
+        status = self.opencl_loaded_dll.clGetDeviceInfo(self.cl_device_id,
+                                                        ctypes.c_int(4096),  # CL_DEVICE_TYPE
+                                                        size,
+                                                        name,
+                                                        None)
+        opencl.check(status)
+        print("CL_DEVICE_TYPE " + str(name.value))
+
+        size = ctypes.c_size_t(0)
+        status = self.opencl_loaded_dll.clGetDeviceInfo(self.cl_device_id,
+                                                        ctypes.c_int(4097),  # CL_DEVICE_VENDOR_ID
+                                                        0,
+                                                        None,
+                                                        ctypes.pointer(size))
+        name = (ctypes.c_char * size.value)()
+        opencl.check(status)
+        status = self.opencl_loaded_dll.clGetDeviceInfo(self.cl_device_id,
+                                                        ctypes.c_int(4097),  # CL_DEVICE_VENDOR_ID
+                                                        size,
+                                                        name,
+                                                        None)
+        print("CL_DEVICE_TYPE " + str(name.value))
+        opencl.check(status)
+
+        size = ctypes.c_size_t(0)
+        status = self.opencl_loaded_dll.clGetDeviceInfo(self.cl_device_id,
+                                                        ctypes.c_int(4141),  # CL_DRIVER_VERSION
+                                                        0,
+                                                        None,
+                                                        ctypes.pointer(size))
+        opencl.check(status)
+        name = (ctypes.c_char * size.value)()
+        status = self.opencl_loaded_dll.clGetDeviceInfo(self.cl_device_id,
+                                                        ctypes.c_int(4141),  # CL_DRIVER_VERSION
+                                                        size,
+                                                        name,
+                                                        None)
+        print("CL_DRIVER_VERSION " + str(name.value))
+        opencl.check(status)
 
     def _setup_platform(self):
         num_of_platforms = ctypes.c_uint(0)
@@ -178,9 +241,9 @@ class Wrapper:
 
     def _setup_device(self):
         num_devices = ctypes.c_uint(0)
-        self._cl_device_id = ctypes.c_void_p(0)
+        self.cl_device_id = ctypes.c_void_p(0)
         status = self.opencl_loaded_dll.clGetDeviceIDs(self._cl_platform_id,
-                                                       ctypes.c_uint(opencl.map_flags("CL_DEVICE_TYPE_ALL")),
+                                                       ctypes.c_uint(opencl.map_flags("CL_DEVICE_TYPE_GPU")),
                                                        0,
                                                        None,
                                                        ctypes.pointer(num_devices))
@@ -188,9 +251,9 @@ class Wrapper:
         if num_devices == 0:
             raise Exception("No OpenCL devices found")
         status = self.opencl_loaded_dll.clGetDeviceIDs(self._cl_platform_id,
-                                                       ctypes.c_uint(opencl.map_flags("CL_DEVICE_TYPE_ALL")),
+                                                       ctypes.c_uint(opencl.map_flags("CL_DEVICE_TYPE_GPU")),
                                                        1,  # num_devices
-                                                       ctypes.byref(self._cl_device_id),
+                                                       ctypes.byref(self.cl_device_id),
                                                        None)
         opencl.check(status)
 
@@ -199,7 +262,7 @@ class Wrapper:
         status = ctypes.c_int(0)
         _context = self.opencl_loaded_dll.clCreateContext(ctypes.pointer(ctypes.c_uint(0)),
                                                           ctypes.c_uint(1),
-                                                          ctypes.byref(self._cl_device_id),
+                                                          ctypes.byref(self.cl_device_id),
                                                           None,
                                                           None,
                                                           ctypes.pointer(status))
@@ -210,7 +273,7 @@ class Wrapper:
         _queue = ctypes.c_void_p(0)
         status = ctypes.c_int(0)
         _queue = self.opencl_loaded_dll.clCreateCommandQueue(self.context,
-                                                             self._cl_device_id,
+                                                             self.cl_device_id,
                                                              None,
                                                              ctypes.pointer(status))
         opencl.check(status.value)

@@ -1,5 +1,4 @@
 import ctypes
-import numpy
 
 from . import wrapper, opencl
 from . import dll
@@ -18,29 +17,32 @@ class Vector:
         dll.check(status)
 
         status = ctypes.c_int(0)
-        self.vector.values = self.wrapper.opencl_loaded_dll.clCreateBuffer(self.wrapper.context,
-                                                                           ctypes.c_int(opencl.map_flags("CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR")),
-                                                                           n * ctypes.sizeof(ctypes.c_float),
-                                                                           (ctypes.c_float * n)(*x),
-                                                                           ctypes.byref(status))
+        self.vector.values = self.wrapper.opencl_loaded_dll.clCreateBuffer(
+            self.wrapper.context,
+            ctypes.c_int(opencl.map_flags("CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR")),
+            n * ctypes.sizeof(ctypes.c_float),
+            (ctypes.c_float * n)(*x),
+            ctypes.byref(status))
         opencl.check(status.value)
         self.vector.num_values = ctypes.c_ulong(n)
 
+    def print_values(self):
+        result = (ctypes.c_float * self.vector.num_values)()
+        status = self.wrapper.opencl_loaded_dll.clEnqueueReadBuffer(
+            wrapper.command_queue,
+            self.vector.values,
+            ctypes.c_bool(True),
+            0,
+            ctypes.c_int(self.vector.num_values * ctypes.sizeof(ctypes.c_float)),
+            result,
+            0,
+            None,
+            None
+        )
+        opencl.check(status)
+        for i in range(self.vector.num_values):
+            print(result[i])
+        print()
+
     # def __del__(self):
     #     pass
-
-    def some_info(self):
-        ofs = getattr(dll.ClsparseDenseVector, "values").offset
-        print("ofs", ofs)
-        p = ctypes.pointer(ctypes.c_void_p.from_buffer(self.vector, ofs))
-        print(p, p.contents)
-        _address = ctypes.cast(p, ctypes.c_void_p).value
-        print("adr", _address)
-        _array_type = ctypes.c_float * self.vector.num_values
-        a = numpy.frombuffer(_array_type.from_address(_address), dtype="float32")
-        print("array", a)
-        a = numpy.frombuffer(_array_type.from_address(self.vector.values), dtype="float32")
-        print("array", a)
-
-        k = ctypes.c_void_p.from_address(self.vector.values)
-        print(k)
