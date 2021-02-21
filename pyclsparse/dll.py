@@ -38,6 +38,11 @@ class ClsparseDenseVector(ctypes.Structure):
 
 
 def clsparse_load_and_configure(clsparse_lib_path: str):
+    """
+    Definition of signatures of functions of the clSPARSE library
+    :param clsparse_lib_path:
+    :return:
+    """
     lib = ctypes.cdll.LoadLibrary(clsparse_lib_path)
 
     lib.clsparseSetup.restype = ctypes.c_uint
@@ -76,6 +81,9 @@ def clsparse_load_and_configure(clsparse_lib_path: str):
     return lib
 
 
+"""
+Error codes from the clSPARSE library 
+"""
 _status_codes_mappings = {
     0: "clsparseSuccess",
     1: "clsparseInvalidValue",

@@ -1,7 +1,4 @@
 import ctypes
-import os
-
-import numpy
 
 from . import wrapper, opencl
 from . import dll
@@ -12,6 +9,9 @@ __all__ = [
 
 
 class Matrix:
+    """
+    This class represents a wrapper over the clsparseCsrMatrix class
+    """
     def __init__(self, path_to_matrix: str):
         byte_path = path_to_matrix.encode('utf-8')
 
@@ -48,12 +48,6 @@ class Matrix:
             None,
             ctypes.byref(status))
         opencl.check(status.value)
-        print(ctypes.c_void_p.from_address(self.matrix.values).value)
-        print(self.matrix.values, self.matrix.col_indices, self.matrix.row_pointer)
-        self.matrix.values += ctypes.c_void_p.from_address(self.matrix.values).value
-        self.matrix.col_indices += ctypes.c_void_p.from_address(self.matrix.values).value
-        self.matrix.row_pointer += ctypes.c_void_p.from_address(self.matrix.values).value
-        # self.some_info()
         status = self.wrapper.clsparse_loaded_dll.clsparseSCsrMatrixfromFile(
             ctypes.byref(self.matrix),
             byte_path,
@@ -77,17 +71,25 @@ class Matrix:
         dll.check(status)
         return nrow, ncol, nnz
 
-    def some_info(self):
-        fields = ["num_rows", "num_cols", "num_nonzeros", "values", "col_indices",
-                  "row_pointer", "off_values", "off_col_indices", "off_row_pointer", "meta"]
-        for i in range(len(fields)):
-            ofs = getattr(dll.ClsparseCsrMatrix, fields[i]).offset
-            print("ofs", fields[i], ofs)
-            p = ctypes.pointer(ctypes.c_void_p.from_buffer(self.matrix, ofs))
-            print(p, p.contents)
-            print()
-
-        k = ctypes.c_void_p.from_address(self.matrix.values)
-        print(k)
-
-        print(self.matrix)
+    def get_cols(self) -> list:
+        """
+        Function returns matrix col_indices
+        :return:
+        """
+        result = (ctypes.c_float * self.matrix.num_cols)()
+        status = self.wrapper.opencl_loaded_dll.clEnqueueReadBuffer(
+            wrapper.command_queue,
+            self.matrix.col_indices,
+            ctypes.c_bool(True),
+            0,
+            ctypes.c_int(self.matrix.num_cols * ctypes.sizeof(ctypes.c_float)),
+            result,
+            0,
+            None,
+            None
+        )
+        opencl.check(status)
+        ret = list()
+        for i in range(self.matrix.num_cols):
+            ret.append(result[i])
+        return ret

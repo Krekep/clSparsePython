@@ -44,6 +44,9 @@ def init_wrapper():
 
 
 class Wrapper:
+    """
+    Performs initial initialization of libraries and provides access to them
+    """
     def __init__(self):
         self._cl_platform_id = None
         self.cl_device_id = None

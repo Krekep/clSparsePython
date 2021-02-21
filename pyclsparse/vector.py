@@ -9,6 +9,9 @@ __all__ = [
 
 
 class Vector:
+    """
+    This class represents a wrapper over the clsparseDenseVector class
+    """
     def __init__(self, n: int, x: list):
         self.wrapper = wrapper.singleton
 
@@ -26,7 +29,11 @@ class Vector:
         opencl.check(status.value)
         self.vector.num_values = ctypes.c_ulong(n)
 
-    def print_values(self):
+    def get_values(self) -> list:
+        """
+        Function returns vector values
+        :return:
+        """
         result = (ctypes.c_float * self.vector.num_values)()
         status = self.wrapper.opencl_loaded_dll.clEnqueueReadBuffer(
             wrapper.command_queue,
@@ -40,9 +47,10 @@ class Vector:
             None
         )
         opencl.check(status)
+        ret = list()
         for i in range(self.vector.num_values):
-            print(result[i])
-        print()
+            ret.append(result[i])
+        return ret
 
     # def __del__(self):
     #     pass

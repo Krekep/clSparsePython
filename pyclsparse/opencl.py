@@ -8,6 +8,11 @@ __all__ = [
 
 
 def opencl_load_and_configure(opencl_lib_path: str):
+    """
+    Definition of signatures of functions of the OpenCL library
+    :param opencl_lib_path:
+    :return:
+    """
     lib = ctypes.cdll.LoadLibrary(opencl_lib_path)
 
     cl_platform_id = ctypes.c_void_p
@@ -119,6 +124,9 @@ def opencl_load_and_configure(opencl_lib_path: str):
     return lib
 
 
+"""
+Several error codes from the OpenCL library 
+"""
 _status_codes_mappings = {
     0: "CL_SUCCESS",
     -1: "CL_DEVICE_NOT_FOUND",
